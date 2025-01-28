@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek AI Chat</title>
+    <style>
+        :root {
+            --primary-color: #6c5ce7;  /* 主色调 */
+            --bg-pattern: url('data:image/svg+xml,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><path d="M44.4,-51.4C57.1,-41.8,66.1,-26.2,69.9,-8.4C73.6,9.4,72,29.4,62.4,44.7C52.8,60.1,35.2,70.8,16.2,75.5C-2.7,80.1,-22.9,78.7,-37.7,69.1C-52.5,59.5,-61.9,41.8,-68.6,23.6C-75.2,5.4,-79.1,-13.3,-73.6,-28.9C-68.1,-44.4,-53.3,-56.7,-38.1,-65.5C-22.8,-74.3,-7.1,-79.5,8.9,-86.9C24.9,-94.3,49.8,-103.8,62.7,-96.8" fill="%236c5ce722"/></svg>');
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Segoe UI', system-ui;
+            margin: 0;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 聊天容器 */
+        .chat-container {
+            flex: 1;
+            background: rgba(255,255,255,0.9);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .chat-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: var(--bg-pattern);
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        /* 消息样式 */
+        .message {
+            max-width: 70%;
+            margin: 10px;
+            padding: 15px 20px;
+            border-radius: 15px;
+            animation: fadeIn 0.3s ease;
+            position: relative;
+        }
+
+        .user-message {
+            background: var(--primary-color);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message {
+            background: #fff;
+            border: 1px solid #eee;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+
+        /* 输入区域 */
+        .input-container {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid var(--primary-color);
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        #user-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(108,92,231,0.2);
+        }
+
+        #send-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0 30px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        #send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* 加载动画 */
+        .typing-indicator {
+            display: inline-block;
+            padding: 15px 20px;
+            background: #fff;
+            border-radius: 15px;
+        }
+
+        .typing-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin-right: 3px;
+            background: #ddd;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes typing {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-container" id="chat-box"></div>
+        
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="输入消息..." />
+            <button id="send-btn">发送</button>
+        </div>
+    </div>
+
+    <script>
+        // DeepSeek API配置
+        const API_KEY = 'sk-8854137232d84db68c7332c231ef08be'; // 替换为你的API Key
+        const API_URL = 'https://api.deepseek.com/v1/chat/completions';
+
+        // 初始化聊天容器
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        // 添加消息到聊天框
+        function addMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            messageDiv.textContent = content;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // 显示加载状态
+        function showTyping() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot-message typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot" style="animation-delay: 0.2s"></div>
+                <div class="typing-dot" style="animation-delay: 0.4s"></div>
+            `;
+            chatBox.appendChild(typingDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return typingDiv;
+        }
+
+        // 调用DeepSeek API
+        async function getAIResponse(prompt) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "deepseek-chat",
+                        messages: [{ role: "user", content: prompt }],
+                        temperature: 0.7
+                    })
+                });
+
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } catch (error) {
+                console.error('API调用错误:', error);
+                return '抱歉，暂时无法处理您的请求';
+            }
+        }
+
+        // 处理用户输入
+        async function handleUserInput() {
+            const prompt = userInput.value.trim();
+            if (!prompt) return;
+
+            // 显示用户消息
+            addMessage(prompt, true);
+            userInput.value = '';
+
+            // 显示加载状态
+            const typingElement = showTyping();
+
+            // 获取AI回复
+            const response = await getAIResponse(prompt);
+            
+            // 移除加载状态
+            chatBox.removeChild(typingElement);
+            
+            // 显示AI回复
+            addMessage(response);
+        }
+
+        // 事件监听
+        sendBtn.addEventListener('click', handleUserInput);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleUserInput();
+        });
+
+        // 初始欢迎消息
+        addMessage("您好！我是DeepSeek AI，有什么可以帮您？");
+    </script>
+</body>
+</html>
