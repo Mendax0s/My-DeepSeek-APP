@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek AI Chat</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 主题切换按钮 -->
+    <div class="theme-picker">
+        <button onclick="changeTheme('default')">默认</button>
+        <button onclick="changeTheme('cyberpunk')">赛博</button>
+    </div>
+
+    <!-- 聊天容器 -->
+    <div class="container">
+        <div class="chat-container" id="chat-box"></div>
+        
+        <!-- 输入区域 -->
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="输入消息...">
+            <button id="send-btn">发送</button>
+            <button id="voice-btn">🎤</button>
+        </div>
+    </div>
+
+    <!-- 核心JS -->
+    <script src="app.js"></script>
+    
+    <!-- Three.js 3D背景 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // 完整3D背景代码（与之前提供的完全一致）
+        function init3DBackground() {
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.prepend(renderer.domElement);
+
+            // 创建动态粒子
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            for (let i = 0; i < 5000; i++) {
+                vertices.push(
+                    Math.random() * 2000 - 1000,
+                    Math.random() * 2000 - 1000,
+                    Math.random() * 2000 - 1000
+                );
+            }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            
+            const material = new THREE.PointsMaterial({ 
+                size: 2,
+                color: new THREE.Color().setHSL(Math.random(), 0.7, 0.5)
+            });
+            
+            const particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+
+            // 动画循环
+            function animate() {
+                requestAnimationFrame(animate);
+                particles.rotation.x += 0.001;
+                particles.rotation.y += 0.002;
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+        init3DBackground();
+    </script>
+</body>
+</html>

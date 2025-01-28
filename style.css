@@ -1,0 +1,90 @@
+/* 基础样式 */
+:root {
+    --primary-color: #6c5ce7;
+    --bg-color: #f8f9fa;
+    --bg-pattern: url('assets/theme-pattern.svg');
+}
+
+body {
+    background: var(--bg-color);
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    overflow: hidden;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 聊天容器样式 */
+.chat-container {
+    flex: 1;
+    background: rgba(255,255,255,0.9);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* 消息气泡 */
+.message {
+    max-width: 70%;
+    margin: 10px;
+    padding: 15px 20px;
+    border-radius: 15px;
+    animation: fadeIn 0.3s ease;
+}
+
+.user-message {
+    background: var(--primary-color);
+    color: white;
+    margin-left: auto;
+}
+
+.bot-message {
+    background: #fff;
+    border: 1px solid #eee;
+    margin-right: auto;
+}
+
+/* 输入区域 */
+.input-container {
+    display: flex;
+    gap: 10px;
+    padding: 20px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 15px;
+    margin-top: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+#user-input {
+    flex: 1;
+    padding: 15px;
+    border: 2px solid var(--primary-color);
+    border-radius: 12px;
+    font-size: 16px;
+}
+
+#send-btn, #voice-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0 30px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+/* 动画 */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
